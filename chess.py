@@ -15,10 +15,10 @@ def print_board(state):
     WIDTH = HEIGHT = 768
     SQ_SIZE = HEIGHT // DIMENSIONS
     MAX_FPS = 15
-    IMAGES = {'bQ': p.transform.scale(p.image.load("images/bQ.png"), (SQ_SIZE, SQ_SIZE)),
-              'bB': p.transform.scale(p.image.load("images/bB.png"), (SQ_SIZE, SQ_SIZE)),
-              'bK': p.transform.scale(p.image.load("images/bK.png"), (SQ_SIZE, SQ_SIZE)),
-              'bR': p.transform.scale(p.image.load("images/bR.png"), (SQ_SIZE, SQ_SIZE))
+    IMAGES = {'bQ': p.transform.scale(p.image.load("bQ.png"), (SQ_SIZE, SQ_SIZE)),
+              'bB': p.transform.scale(p.image.load("bB.png"), (SQ_SIZE, SQ_SIZE)),
+              'bK': p.transform.scale(p.image.load("bK.png"), (SQ_SIZE, SQ_SIZE)),
+              'bR': p.transform.scale(p.image.load("bR.png"), (SQ_SIZE, SQ_SIZE))
               }
     # Initialize game stuff
     p.init()
