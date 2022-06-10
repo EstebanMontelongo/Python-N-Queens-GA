@@ -1,2 +1,1 @@
-# Python-N-Queens-GA
-Chess Puzzle Solver in Python
+# CPSC-481-Final-Project
