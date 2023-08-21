@@ -32,10 +32,10 @@ class BitBoard:
         position = self._get_position(row, col)
         return (self.bitboard & (1 << position)) != 0
 
-    def shift_to(self, target_row, target_col):
-        """Shift the current board's bits to align with the given position (target_row, target_col)."""
+    def shift_to(self, shifts, target_row, target_col):
+        """Shift the current board's bits based on the provided shifts to align with the given position (target_row, target_col)."""
         shifted_board = BitBoard(self.N)
-        for (row_shift, col_shift) in self.knight_shifts:
+        for (row_shift, col_shift) in shifts:
             shifted_row = target_row + row_shift
             shifted_col = target_col + col_shift
             # Set the bit at the shifted position if it is within the board's boundaries
@@ -172,23 +172,128 @@ class ChessBoard:
         
         # For each knight move direction, shift the precomputed move board to the target position
         for move_board in self.knight_move_boards:
-            shifted_move = move_board.shift_to(row, col)
-            moves.bitboard |= shifted_move.bitboard
+            knight_moves = move_board.shift_to(self.knight_shifts, row, col)
+            moves.bitboard |= knight_moves.bitboard
             
         return moves
 
+    def pawn_moves_from(self, row, col):
+        """Generate possible capture moves for a pawn at a given position."""
+        moves = BitBoard(self.N)
+        
+        # Capture squares for white pawn
+        capture_shifts = [(-1, -1), (-1, 1)]  # Diagonal moves for capture
+
+        for (row_shift, col_shift) in capture_shifts:
+            capture_row = row + row_shift
+            capture_col = col + col_shift
+            # Set the bit at the capture position if it is within the board's boundaries
+            if 0 <= capture_row < self.N and 0 <= capture_col < self.N:
+                moves.set_bit(capture_row, capture_col)
+                
+        return moves
+
+    def rook_moves_from(self, row, col):
+        """Generate possible moves for a rook at a given position using bitboards."""
+        moves = BitBoard(self.N)
+        
+        position = moves._get_position(row, col)
+        occupied = self.black_board.bitboard | self.white_board.bitboard
+        same_color = self.white_board.bitboard  # Assuming white rook for simplicity
+        rook_bit = 1 << position
+        
+        # Helper function to generate rook moves
+        def spread(bit, shift_func, max_steps):
+            for _ in range(max_steps):
+                bit = shift_func(bit)
+                if bit & same_color:  # Stop if it's the same color piece
+                    break
+                moves.bitboard |= bit
+                if bit & occupied:  # Stop if any piece is encountered
+                    break
+
+        # Calculate the distances to each boundary from the current position
+        top_boundary = self.N - 1 - row
+        bottom_boundary = row
+        left_boundary = col
+        right_boundary = self.N - 1 - col
+
+        # North
+        spread(rook_bit, lambda b: (b << self.N), top_boundary)
+        
+        # South
+        spread(rook_bit, lambda b: (b >> self.N), bottom_boundary)
+        
+        # East
+        spread(rook_bit, lambda b: (b << 1), right_boundary)
+        
+        # West
+        spread(rook_bit, lambda b: (b >> 1), left_boundary)
+        
+        return moves
+
+    def bishop_moves_from(self, row, col):
+        """Generate possible moves for a bishop at a given position using bitboards."""
+        moves = BitBoard(self.N)
+        
+        position = moves._get_position(row, col)
+        occupied = self.black_board.bitboard | self.white_board.bitboard
+        same_color = self.white_board.bitboard  # Assuming white bishop for simplicity
+        bishop_bit = 1 << position
+        
+        # Helper function to generate bishop moves
+        def spread(bit, shift_func, max_steps):
+            for _ in range(max_steps):
+                bit = shift_func(bit)
+                if bit & same_color:  # Stop if it's the same color piece
+                    break
+                moves.bitboard |= bit
+                if bit & occupied:  # Stop if any piece is encountered
+                    break
+        
+        # Calculate the distances to each boundary from the current position
+        top_boundary = self.N - 1 - row
+        bottom_boundary = row
+        left_boundary = col
+        right_boundary = self.N - 1 - col
+
+        # North-East
+        spread(bishop_bit, lambda b: (b << (self.N + 1)), min(top_boundary, right_boundary))
+        
+        # North-West
+        spread(bishop_bit, lambda b: (b << (self.N - 1)), min(top_boundary, left_boundary))
+        
+        # South-East
+        spread(bishop_bit, lambda b: (b >> (self.N - 1)), min(bottom_boundary, right_boundary))
+        
+        # South-West
+        spread(bishop_bit, lambda b: (b >> (self.N + 1)), min(bottom_boundary, left_boundary))
+        
+        return moves
+
+    def queen_moves_from(self, row, col):
+        return self.bishop_moves_from(row, col) | self.rook_moves_from(row, col)
+
 def main():
-    N = 64
+    N = 8
     chessboard = ChessBoard(N)
     
-    knight_moves = [ (0,0), (1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7), (8,8)]
+    piece_positions = [ (0,0), (1,1), (2,2), (3,3), (4,4), (5,5), (6,6), (7,7)]
 
-    for (row,col) in knight_moves:
-        moves = chessboard.knight_moves_from(row,col)  # Moves for a knight at position (1, 0)
+    for (row,col) in piece_positions:
+        moves = chessboard.knight_moves_from(row,col)
+        moves.visualize()
+        moves = chessboard.rook_moves_from(row,col)
+        moves.visualize()
+        moves = chessboard.bishop_moves_from(row,col)
+        moves.visualize()
+        moves = chessboard.queen_moves_from(row,col)
+        moves.visualize()
+        moves = chessboard.pawn_moves_from(row,col)
         moves.visualize()
 
 
-
+    print("test done")
 
 if __name__ == "__main__":
          main()
